@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Buddy — Explain it simply, quiz yourself instantly</title>
+<style>
+  :root {
+    --paper: #F6F2E9;
+    --paper-line: #C7D2E3;
+    --ink: #23324D;
+    --ink-soft: #4C5A73;
+    --rule-red: #C1440E;
+    --highlight: #F2C14E;
+    --correct: #3A7D44;
+    --incorrect: #B23A48;
+    --card-shadow: rgba(35, 50, 77, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+
+  body {
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 35px,
+        var(--paper-line) 36px
+      );
+    background-attachment: local;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 32px 80px 64px;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  .page::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 40px;
+    width: 2px;
+    background: var(--rule-red);
+    opacity: 0.55;
+  }
+
+  header {
+    margin-bottom: 36px;
+  }
+
+  .eyebrow {
+    font-size: 13px;
+    color: var(--rule-red);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin: 0 0 6px 0;
+  }
+
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 34px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: var(--ink);
+  }
+
+  .tagline {
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 46ch;
+  }
+
+  .card {
+    background: #FFFDF9;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px var(--card-shadow);
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(35, 50, 77, 0.08);
+  }
+
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: 14px;
+    font-size: 15px;
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: 3px;
+    resize: vertical;
+  }
+
+  textarea:focus, input:focus, button:focus-visible {
+    outline: 2px solid var(--rule-red);
+    outline-offset: 1px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 20px;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+
+  button:active { transform: translateY(1px); }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn-primary:hover { background: #1a2740; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+  }
+  .btn-secondary:hover { background: rgba(35, 50, 77, 0.06); }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .output {
+    margin-top: 18px;
+    padding: 16px 18px;
+    background: #FFF9E8;
+    border-left: 3px solid var(--highlight);
+    border-radius: 2px;
+    font-size: 15px;
+    color: var(--ink);
+    display: none;
+  }
+
+  .output.visible { display: block; }
+
+  .output-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: none;
+    color: var(--rule-red);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .quiz-question {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--paper-line);
+  }
+  .quiz-question:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .quiz-question p {
+    font-weight: 600;
+    margin: 0 0 10px 0;
+  }
+
+  .quiz-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: 3px;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .quiz-option:hover { border-color: var(--ink-soft); }
+  .quiz-option.correct { background: #E4F2E6; border-color: var(--correct); color: var(--correct); }
+  .quiz-option.incorrect { background: #FBE9EA; border-color: var(--incorrect); color: var(--incorrect); }
+  .quiz-option:disabled { cursor: default; }
+
+  .score-line {
+    font-weight: 600;
+    margin-top: 6px;
+    color: var(--ink);
+  }
+
+  .settings-toggle {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 13px;
+    text-decoration: underline;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .settings-panel {
+    display: none;
+    margin-top: 14px;
+  }
+  .settings-panel.visible { display: block; }
+
+  .settings-panel input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid var(--paper-line);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  .error {
+    color: var(--incorrect);
+    font-size: 14px;
+    margin-top: 12px;
+    display: none;
+  }
+  .error.visible { display: block; }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--paper-line);
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .badge {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 3px;
+    margin-right: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .page { padding: 32px 20px 60px 44px; }
+    .page::before { left: 24px; }
+    h1 { font-size: 27px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <p class="eyebrow">Student AI Track</p>
+      <h1>Study Buddy</h1>
+      <p class="tagline">Paste your notes. Get a plain-language explanation and a quick quiz to check what stuck.</p>
+    </header>
+
+    <div class="card">
+      <label for="notes">Your notes or syllabus text</label>
+      <textarea id="notes" placeholder="Paste a paragraph from your notes, textbook, or syllabus here..."></textarea>
+
+      <div class="actions">
+        <button class="btn-primary" id="explainBtn">Explain simply</button>
+        <button class="btn-secondary" id="quizBtn">Generate quiz</button>
+      </div>
+
+      <button class="settings-toggle" id="settingsToggle" style="margin-top: 14px;">API settings</button>
+      <div class="settings-panel" id="settingsPanel">
+        <input type="password" id="apiKey" placeholder="API key (stored only in this browser)">
+        <input type="text" id="apiEndpoint" placeholder="Chat completions endpoint" value="https://api.openai.com/v1/chat/completions">
+        <input type="text" id="modelName" placeholder="Model name" value="gpt-4o-mini">
+        <p class="hint">Swap the endpoint and model to point at watsonx.ai, Groq, or any OpenAI-compatible API. Nothing is sent anywhere except the endpoint you set.</p>
+      </div>
+
+      <p class="error" id="errorMsg"></p>
+    </div>
+
+    <div class="output" id="explainOutput">
+      <span class="output-label">Explanation</span>
+      <div id="explainText"></div>
+    </div>
+
+    <div class="output" id="quizOutput">
+      <span class="output-label">Quiz</span>
+      <div id="quizBody"></div>
+      <p class="score-line" id="scoreLine" style="display:none;"></p>
+    </div>
+
+    <footer>
+      <span class="badge">Built with IBM Bob</span>
+      AI Study Buddy — Student AI Track submission
+    </footer>
+  </div>
+
+<script>
+  const notesEl = document.getElementById('notes');
+  const explainBtn = document.getElementById('explainBtn');
+  const quizBtn = document.getElementById('quizBtn');
+  const explainOutput = document.getElementById('explainOutput');
+  const explainText = document.getElementById('explainText');
+  const quizOutput = document.getElementById('quizOutput');
+  const quizBody = document.getElementById('quizBody');
+  const scoreLine = document.getElementById('scoreLine');
+  const errorMsg = document.getElementById('errorMsg');
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const apiKeyEl = document.getElementById('apiKey');
+  const apiEndpointEl = document.getElementById('apiEndpoint');
+  const modelNameEl = document.getElementById('modelName');
+
+  // Persist non-sensitive settings locally; API key only kept for the session.
+  apiEndpointEl.value = localStorage.getItem('sb_endpoint') || apiEndpointEl.value;
+  modelNameEl.value = localStorage.getItem('sb_model') || modelNameEl.value;
+  apiEndpointEl.addEventListener('change', () => localStorage.setItem('sb_endpoint', apiEndpointEl.value));
+  modelNameEl.addEventListener('change', () => localStorage.setItem('sb_model', modelNameEl.value));
+
+  settingsToggle.addEventListener('click', () => {
+    settingsPanel.classList.toggle('visible');
+  });
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.classList.add('visible');
+  }
+  function clearError() {
+    errorMsg.textContent = '';
+    errorMsg.classList.remove('visible');
+  }
+
+  function setLoading(isLoading, btn, label) {
+    btn.disabled = isLoading;
+    btn.textContent = isLoading ? 'Thinking…' : label;
+  }
+
+  async function callAI(prompt) {
+    const key = apiKeyEl.value.trim();
+    const endpoint = apiEndpointEl.value.trim();
+    const model = modelNameEl.value.trim();
+
+    if (!key) throw new Error('Add your API key under "API settings" first.');
+    if (!endpoint) throw new Error('Add an API endpoint under "API settings" first.');
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.4
+      })
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error('API error (' + res.status + '): ' + body.slice(0, 200));
+    }
+
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (!content) throw new Error('No response content returned from the API.');
+    return content;
+  }
+
+  explainBtn.addEventListener('click', async () => {
+    clearError();
+    const notes = notesEl.value.trim();
+    if (!notes) { showError('Paste some notes first.'); return; }
+
+    setLoading(true, explainBtn, 'Explain simply');
+    try {
+      const prompt = 'Explain the following in simple, plain language for a student, in 3-4 short sentences:\n\n' + notes;
+      const result = await callAI(prompt);
+      explainText.textContent = result.trim();
+      explainOutput.classList.add('visible');
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      setLoading(false, explainBtn, 'Explain simply');
+    }
+  });
+
+  quizBtn.addEventListener('click', async () => {
+    clearError();
+    const notes = notesEl.value.trim();
+    if (!notes) { showError('Paste some notes first.'); return; }
+
+    setLoading(true, quizBtn, 'Generate quiz');
+    scoreLine.style.display = 'none';
+    try {
+      const prompt = 'Create exactly 3 multiple-choice questions from the following notes. ' +
+        'Respond with ONLY valid JSON, no extra text, in this exact format: ' +
+        '[{"question":"...","options":["...","...","...","..."],"correctIndex":0}]\n\nNotes:\n' + notes;
+      const raw = await callAI(prompt);
+      renderQuiz(raw);
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      setLoading(false, quizBtn, 'Generate quiz');
+    }
+  });
+
+  function renderQuiz(raw) {
+    quizBody.innerHTML = '';
+    let questions;
+    try {
+      const jsonMatch = raw.match(/\[[\s\S]*\]/);
+      questions = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    } catch (e) {
+      // Fallback: show raw text so the demo still works even if JSON parsing fails.
+      quizBody.innerHTML = '<pre style="white-space: pre-wrap; font-family: inherit; margin:0;">' +
+        raw.replace(/</g, '&lt;') + '</pre>';
+      quizOutput.classList.add('visible');
+      return;
+    }
+
+    let answered = 0;
+    let correct = 0;
+
+    questions.forEach((q, qIndex) => {
+      const block = document.createElement('div');
+      block.className = 'quiz-question';
+
+      const p = document.createElement('p');
+      p.textContent = (qIndex + 1) + '. ' + q.question;
+      block.appendChild(p);
+
+      q.options.forEach((opt, oIndex) => {
+        const optBtn = document.createElement('button');
+        optBtn.className = 'quiz-option';
+        optBtn.textContent = opt;
+        optBtn.addEventListener('click', () => {
+          const allOpts = block.querySelectorAll('.quiz-option');
+          allOpts.forEach(o => o.disabled = true);
+          if (oIndex === q.correctIndex) {
+            optBtn.classList.add('correct');
+            correct++;
+          } else {
+            optBtn.classList.add('incorrect');
+            allOpts[q.correctIndex].classList.add('correct');
+          }
+          answered++;
+          if (answered === questions.length) {
+            scoreLine.style.display = 'block';
+            scoreLine.textContent = 'Score: ' + correct + ' / ' + questions.length;
+          }
+        });
+        block.appendChild(optBtn);
+      });
+
+      quizBody.appendChild(block);
+    });
+
+    quizOutput.classList.add('visible');
+  }
+</script>
+</body>
+</html>
